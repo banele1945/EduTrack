@@ -1,0 +1,217 @@
+/* Job Card Styles */
+.job-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.job-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.job-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.job-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.job-type {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.job-content {
+    padding: 1.5rem;
+}
+
+.job-content h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.job-company {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.job-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.job-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.job-meta i {
+    color: #007bff;
+}
+
+.job-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.job-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.job-posted-date {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.apply-button {
+    background: #007bff;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background 0.3s ease;
+}
+
+.apply-button:hover {
+    background: #0056b3;
+}
+
+/* Job Modal Styles */
+#jobModal .modal-content {
+    max-width: 800px;
+    width: 90%;
+}
+
+#jobModal .course-header {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+#jobModal .course-header img {
+    width: 300px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+#jobModal .course-info {
+    flex: 1;
+}
+
+#jobModal .course-info h2 {
+    margin: 0 0 1rem;
+    color: #333;
+}
+
+#jobModal .course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+#jobModal .course-description {
+    margin-top: 2rem;
+}
+
+#jobModal .course-description h3 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+#jobModal .course-actions {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+/* Loading and Error States */
+.loading-placeholder {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.loading-placeholder i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    color: #dc3545;
+}
+
+.error-message i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.no-results {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.no-results i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #666;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.pagination-controls button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    background: #007bff;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.pagination-controls button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination-controls button:not(:disabled):hover {
+    background: #0056b3;
+} 

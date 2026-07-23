@@ -1,0 +1,26 @@
+[2025-06-16T13:19:49.340Z] Starting job management process...
+[2025-06-16T13:19:49.731Z] Initial job count: 78
+[2025-06-16T13:19:49.732Z] 
+=== Starting Job Cleanup ===
+[2025-06-16T13:21:09.902Z] Job cleanup completed. Removed 18 expired jobs.
+[2025-06-16T13:21:09.903Z] 
+=== Starting Job Fetch ===
+[2025-06-16T13:22:19.576Z] Successfully fetched and stored 44 new jobs
+[2025-06-16T13:22:19.576Z] 
+=== Job Management Summary ===
+[2025-06-16T13:22:19.607Z] 
+Total jobs in database: 104
+[2025-06-16T13:22:19.609Z] 
+Job Age Distribution:
+[2025-06-16T13:22:19.627Z] - Last 7 days: 56 jobs
+[2025-06-16T13:22:19.640Z] - 8-14 days: 30 jobs
+[2025-06-16T13:22:19.641Z] - 15-21 days: 11 jobs
+[2025-06-16T13:22:19.677Z] - 22-30 days: 7 jobs
+[2025-06-16T13:22:19.690Z] 
+Category Distribution:
+[2025-06-16T13:22:19.691Z] - Data Science: 42 jobs
+[2025-06-16T13:22:19.710Z] - Design: 38 jobs
+[2025-06-16T13:22:19.723Z] - Other: 12 jobs
+[2025-06-16T13:22:19.724Z] - Development: 9 jobs
+[2025-06-16T13:22:19.742Z] - Engineering: 2 jobs
+[2025-06-16T13:22:19.743Z] - Business: 1 jobs

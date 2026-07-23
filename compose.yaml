@@ -1,0 +1,42 @@
+services:
+  js-app:
+    build:
+      context: .
+    container_name: js-app
+    restart: unless-stopped
+    init: true
+    # env_file: ./.env  # Uncomment if .env file exists
+    ports:
+      - "3000:3000"  # Exposed by Dockerfile
+    # If your app requires a database or other services, add them below and update depends_on
+    # depends_on:
+    #   - postgres
+    networks:
+      - appnet
+
+# Example external service configuration (uncomment and configure if needed):
+#  postgres:
+#    image: postgres:latest
+#    restart: unless-stopped
+#    environment:
+#      POSTGRES_USER: user
+#      POSTGRES_PASSWORD: password
+#      POSTGRES_DB: appdb
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#    healthcheck:
+#      test: ["CMD", "pg_isready", "-U", "user"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    networks:
+#      - appnet
+
+networks:
+  appnet:
+    driver: bridge
+
+# Uncomment if you add a database with persistent storage
+#volumes:
+#  pgdata:
+#
