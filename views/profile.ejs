@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - EduTrack</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .profile-container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 32px; text-align: center; }
+        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 18px; border: 3px solid #007bff; }
+        .profile-info h2 { margin: 0 0 8px; font-size: 2rem; color: #222; }
+        .profile-info p { margin: 6px 0; color: #555; font-size: 1.1rem; }
+        .profile-label { font-weight: bold; color: #007bff; }
+        .edit-profile-form { margin-top: 24px; text-align: left; }
+        .edit-profile-form label { display: block; margin: 12px 0 4px; font-weight: 500; }
+        .edit-profile-form input, .edit-profile-form select { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 10px; }
+        .edit-profile-form button { width: 100%; padding: 10px; background: #007bff; color: #fff; border: none; border-radius: 5px; font-size: 1.1rem; cursor: pointer; margin-top: 10px; }
+        .edit-profile-form button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <img src="<%= profileUser.avatar ? profileUser.avatar : '/images/default-avatar.jpg' %>" alt="Avatar" class="profile-avatar" id="profileAvatarPreview">
+        <div class="profile-info">
+            <h2><%= profileUser.fullName || profileUser.full_name || profileUser.Full_Name %></h2>
+            <p><span class="profile-label">Email:</span> <%= profileUser.email || profileUser.Email %></p>
+            <p><span class="profile-label">Institution:</span> <%= profileUser.institution || profileUser.Institution %></p>
+            <p><span class="profile-label">Department:</span> <%= profileUser.department || profileUser.Department %></p>
+            <p><span class="profile-label">Year of Study:</span> <%= profileUser.yearOfStudy || profileUser.year_of_study || profileUser.Year_Of_Study %></p>
+        </div>
+        <form class="edit-profile-form" id="editProfileForm" method="POST" action="/profile" enctype="multipart/form-data">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" name="fullName" value="<%= profileUser.fullName || profileUser.full_name || profileUser.Full_Name %>" required>
+
+            <label for="institution">Institution</label>
+            <input type="text" id="institution" name="institution" value="<%= profileUser.institution || profileUser.Institution %>" required>
+
+            <label for="department">Department</label>
+            <input type="text" id="department" name="department" value="<%= profileUser.department || profileUser.Department %>" required>
+
+            <label for="yearOfStudy">Year of Study</label>
+            <select id="yearOfStudy" name="yearOfStudy" required>
+                <option value="">Select Year</option>
+                <option value="1" <%= (profileUser.yearOfStudy == 1 || profileUser.year_of_study == 1 || profileUser.Year_Of_Study == 1) ? 'selected' : '' %>>1st Year</option>
+                <option value="2" <%= (profileUser.yearOfStudy == 2 || profileUser.year_of_study == 2 || profileUser.Year_Of_Study == 2) ? 'selected' : '' %>>2nd Year</option>
+                <option value="3" <%= (profileUser.yearOfStudy == 3 || profileUser.year_of_study == 3 || profileUser.Year_Of_Study == 3) ? 'selected' : '' %>>3rd Year</option>
+                <option value="4" <%= (profileUser.yearOfStudy == 4 || profileUser.year_of_study == 4 || profileUser.Year_Of_Study == 4) ? 'selected' : '' %>>Final Year</option>
+            </select>
+
+            <label for="avatar">Profile Picture</label>
+            <input type="file" id="avatar" name="avatar" accept="image/*">
+
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+    <script>
+        // Preview avatar image before upload
+        document.getElementById('avatar').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    document.getElementById('profileAvatarPreview').src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html> 

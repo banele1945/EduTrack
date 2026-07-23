@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack - Friends</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>EduTrack</h1>
+        <nav>
+            <a href="/home">Home</a>
+            <a href="/friends">Friends</a>
+            <a href="/messages">Messages</a>
+            <a href="/profile">Profile</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+    <div class="friends-container">
+        <h2>Find Friends</h2>
+        <div class="search-container">
+            <input type="text" id="searchUsers" placeholder="Search users..." class="search-input">
+        </div>
+
+        <!-- Connection Requests Section -->
+        <div class="section-header">
+            <h3>Connection Requests (<span id="requestCount">0</span>)</h3>
+        </div>
+        <div class="requests-list" id="requestsList">
+            <!-- Connection requests will be loaded here -->
+        </div>
+
+        <!-- Other Users Section -->
+        <div class="section-header">
+            <h3>Other Users</h3>
+        </div>
+        <div class="friends-list" id="usersList">
+            <!-- Other users will be loaded here -->
+        </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="profileContent">
+                <!-- Profile content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to load connection requests
+        async function loadConnectionRequests() {
+            try {
+                console.log('=== Frontend Connection Requests Debug ===');
+                console.log('Fetching connection requests...');
+                
+                const response = await fetch('/api/connections/pending/requests');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch connection requests');
+                }
+                
+                const data = await response.json();
+                console.log('Raw response data:', data);
+                
+                // Ensure we have an array
+                if (!Array.isArray(data)) {
+                    console.error('Received non-array data:', data);
+                    throw new Error('Invalid response format');
+                }
+                
+                const requestsList = document.getElementById('requestsList');
+                document.getElementById('requestCount').textContent = data.length;
+                console.log('Request count updated:', data.length);
+
+                if (data.length === 0) {
+                    console.log('No requests found, showing empty state');
+                    requestsList.innerHTML = '<p class="no-requests">No pending connection requests</p>';
+                    return;
+                }
+
+                console.log('Rendering request cards for:', data.length, 'requests');
+                requestsList.innerHTML = data.map(request => {
+                    console.log('Processing request:', request);
+                    return `
+                        <div class="request-card">
+                            <div class="friend-info" onclick="showProfile(${request.id})">
+                                <img src="${request.avatar ? request.avatar : '/images/default-avatar.jpg'}" 
+                                     alt="${request.username}" 
+                                     class="friend-avatar"
+                                     onerror="this.src='/images/default-avatar.jpg'">
+                                <h3>${request.username}</h3>
+                            </div>
+                            <div class="request-actions">
+                                <button class="accept-button" onclick="respondToRequest(${request.connectionId}, 'accept')">Accept</button>
+                                <button class="reject-button" onclick="respondToRequest(${request.connectionId}, 'reject')">Decline</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                console.log('Request cards rendered');
+            } catch (error) {
+                console.error('Error loading connection requests:', error);
+                const requestsList = document.getElementById('requestsList');
+                requestsList.innerHTML = '<p class="no-requests">Error loading connection requests</p>';
+            }
+        }
+
+        // Function to respond to connection request
+        async function respondToRequest(requestId, action) {
+            try {
+                console.log('Responding to request:', { requestId, action });
+                const response = await fetch(`/api/connections/${requestId}/respond`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to respond to request');
+                }
+
+                // Reload both requests and users list
+                await loadConnectionRequests();
+                await loadUsers();
+
+                // Show success message
+                alert(`Connection request ${action}ed successfully`);
+            } catch (error) {
+                console.error('Error responding to request:', error);
+                alert(error.message || 'Failed to respond to request');
+            }
+        }
+
+        // Function to load users
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const users = await response.json();
+                const usersList = document.getElementById('usersList');
+                
+                // Load connection status for each user
+                const usersWithStatus = await Promise.all(users.map(async (user) => {
+                    const statusResponse = await fetch(`/api/connections/status/${user.id}`);
+                    const { status } = await statusResponse.json();
+                    return { ...user, connectionStatus: status };
+                }));
+
+                // Filter out users who have pending requests
+                const filteredUsers = usersWithStatus.filter(user => user.connectionStatus !== 'pending');
+
+                usersList.innerHTML = filteredUsers.map(user => `
+                    <div class="friend-card">
+                        <div class="friend-info" onclick="showProfile(${user.id})">
+                            <img src="${user.avatar ? user.avatar : '/images/default-avatar.jpg'}" 
+                                 alt="${user.username}" 
+                                 class="friend-avatar"
+                                 onerror="this.src='/images/default-avatar.jpg'">
+                            <h3>${user.username}</h3>
+                        </div>
+                        <button class="connect-button ${user.connectionStatus !== 'none' ? 'disabled' : ''}" 
+                                onclick="connectUser(${user.id}, this)"
+                                ${user.connectionStatus !== 'none' ? 'disabled' : ''}>
+                            ${getButtonText(user.connectionStatus)}
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        // Function to get button text based on connection status
+        function getButtonText(status) {
+            switch(status) {
+                case 'pending':
+                    return 'Request Sent';
+                case 'accepted':
+                    return 'Connected';
+                case 'rejected':
+                    return 'Rejected';
+                default:
+                    return 'Connect';
+            }
+        }
+
+        // Function to show user profile
+        async function showProfile(userId) {
+            try {
+                const response = await fetch(`/api/users/${userId}`);
+                const user = await response.json();
+                const modal = document.getElementById('profileModal');
+                const profileContent = document.getElementById('profileContent');
+                
+                profileContent.innerHTML = `
+                    <div class="profile-header">
+                        <img src="${user.avatar ? user.avatar : '/images/default-avatar.jpg'}" 
+                             alt="${user.username}" 
+                             class="profile-avatar"
+                             onerror="this.src='/images/default-avatar.jpg'">
+                        <h2>${user.username}</h2>
+                    </div>
+                    <div class="profile-details">
+                        <p><strong>Institution:</strong> ${user.institution}</p>
+                        <p><strong>Department:</strong> ${user.department}</p>
+                        <p><strong>Year of Study:</strong> ${user.yearOfStudy}</p>
+                    </div>
+                `;
+                
+                modal.style.display = "block";
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        // Function to connect with user
+        async function connectUser(userId, button) {
+            try {
+                const response = await fetch('/api/connections', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId })
+                });
+
+                if (response.ok) {
+                    button.textContent = 'Request Sent';
+                    button.classList.add('disabled');
+                    button.disabled = true;
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to send connection request');
+                }
+            } catch (error) {
+                console.error('Error connecting with user:', error);
+                alert('Failed to send connection request');
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchUsers').addEventListener('input', async (e) => {
+            const searchTerm = e.target.value;
+            if (searchTerm.length < 2) {
+                loadUsers();
+                return;
+            }
+            try {
+                const response = await fetch(`/api/users/search?q=${searchTerm}`);
+                const users = await response.json();
+                
+                // Load connection status for each user
+                const usersWithStatus = await Promise.all(users.map(async (user) => {
+                    const statusResponse = await fetch(`/api/connections/${user.id}`);
+                    const { status } = await statusResponse.json();
+                    return { ...user, connectionStatus: status };
+                }));
+
+                const usersList = document.getElementById('usersList');
+                usersList.innerHTML = usersWithStatus.map(user => `
+                    <div class="friend-card">
+                        <div class="friend-info" onclick="showProfile(${user.id})">
+                            <img src="${user.avatar ? user.avatar : '/images/default-avatar.jpg'}" 
+                                 alt="${user.username}" 
+                                 class="friend-avatar"
+                                 onerror="this.src='/images/default-avatar.jpg'">
+                            <h3>${user.username}</h3>
+                        </div>
+                        <button class="connect-button ${user.connectionStatus !== 'none' ? 'disabled' : ''}" 
+                                onclick="connectUser(${user.id}, this)"
+                                ${user.connectionStatus !== 'none' ? 'disabled' : ''}>
+                            ${getButtonText(user.connectionStatus)}
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error searching users:', error);
+            }
+        });
+
+        // Modal close functionality
+        document.querySelector('.close').onclick = function() {
+            document.getElementById('profileModal').style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('profileModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Load both requests and users when page loads
+        loadConnectionRequests();
+        loadUsers();
+
+        // Listen for connection acceptance notifications
+        socket.on(`connection_accepted_${currentUserId}`, (data) => {
+            alert(data.message);
+            // Reload the users list to update connection statuses
+            loadUsers();
+        });
+    </script>
+</body>
+</html>

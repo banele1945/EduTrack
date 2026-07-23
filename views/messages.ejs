@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - EduTrack</title>
+    <link rel="stylesheet" href="/css/messages.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <!-- Mobile Navigation Toggle -->
+    <button class="mobile-nav-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="messages-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Conversations</h2>
+            </div>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search conversations..." id="searchInput">
+            </div>
+            <div class="conversations" id="conversationsList">
+                <!-- Accepted Connections (Conversations) will be populated dynamically -->
+                <p class="loading-conversations">Loading conversations...</p>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div id="emptyState" class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                <i class="fas fa-comments" style="font-size: 48px; color: #ccc;"></i>
+                <p>Select a conversation to start chatting</p>
+            </div>
+            <div id="chatContent" style="display: none; height: 100%; flex-direction: column;">
+                <div class="chat-header">
+                    <div class="chat-header-info" id="chatHeaderInfo">
+                        <img src="/images/default-avatar.jpg" alt="User Avatar" class="avatar" id="currentChatAvatar">
+                        <div>
+                            <h2 id="currentChatName">Select a conversation</h2>
+                            <span class="status" id="currentChatStatus">Offline</span>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                    </div>
+                </div>
+                <div class="messages" id="messagesContainer">
+                    <!-- Messages will be populated dynamically -->
+                </div>
+                <div class="message-input">
+                    <button class="attach-btn"><i class="fas fa-paperclip"></i></button>
+                    <input type="text" placeholder="Type a message..." id="messageInput">
+                    <button class="send-btn" id="sendMessageBtn" disabled><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Socket.IO
+        const socket = io();
+        let currentConversationId = null; // This will hold the connection_id
+        let currentUserId = null;
+
+        // DOM Elements
+        const conversationsList = document.getElementById('conversationsList');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        const searchInput = document.getElementById('searchInput');
+        const emptyState = document.getElementById('emptyState');
+        const chatContent = document.getElementById('chatContent');
+        const currentChatName = document.getElementById('currentChatName');
+        const currentChatAvatar = document.getElementById('currentChatAvatar');
+        const currentChatStatus = document.getElementById('currentChatStatus');
+
+        // Fetch current user data and load conversations on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchCurrentUser();
+        });
+
+        // Fetch current user data
+        async function fetchCurrentUser() {
+            try {
+                const response = await fetch('/api/user');
+                if (!response.ok) {
+                    // Redirect to login if not authenticated
+                    window.location.href = '/login';
+                    return;
+                }
+                const user = await response.json();
+                currentUserId = user.id;
+                console.log('Current user ID:', currentUserId);
+
+                // Associate socket with user ID
+                socket.emit('setUserId', currentUserId);
+
+                loadConversations();
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+                // Optionally show an error message
+            }
+        }
+
+        // Load conversations (accepted connections)
+        async function loadConversations() {
+            try {
+                conversationsList.innerHTML = '<p class="loading-conversations">Loading conversations...</p>'; // Show loading state
+                const response = await fetch('/messages/conversations'); // This endpoint now returns accepted connections
+                if (!response.ok) {
+                     conversationsList.innerHTML = '<p class="error-loading">Error loading conversations</p>';
+                     throw new Error('Failed to fetch conversations');
+                }
+                const conversations = await response.json();
+                console.log('Loaded conversations (accepted connections):', conversations);
+                renderConversations(conversations);
+            } catch (error) {
+                console.error('Error loading conversations:', error);
+                 conversationsList.innerHTML = '<p class="error-loading">Error loading conversations</p>';
+            }
+        }
+
+        // Render conversations list
+        function renderConversations(conversations) {
+            conversationsList.innerHTML = ''; // Clear loading state or previous list
+
+            if (conversations.length === 0) {
+                conversationsList.innerHTML = '<p class="no-conversations">No accepted connections yet. Find friends to start chatting!</p>';
+                return;
+            }
+
+            conversations.forEach(conv => {
+                const conversationElement = document.createElement('div');
+                conversationElement.classList.add('conversation');
+                // Use connection_id (conv.id) as the data-conversation-id
+                conversationElement.dataset.conversationId = conv.id; 
+                conversationElement.dataset.userId = conv.user.id; // Keep user id for profile view if needed
+
+                conversationElement.innerHTML = `
+                    <img src="${conv.user.avatar}" alt="User Avatar" class="avatar">
+                    <div class="conversation-info">
+                        <h3>${conv.user.username}</h3>
+                        <p class="last-message">${conv.lastMessage || 'No messages yet'}</p>
+                    </div>
+                    <div class="conversation-meta">
+                        <span class="time">${conv.lastMessageTime || ''}</span>
+                        ${conv.unreadCount > 0 ? `<span class="unread">${conv.unreadCount}</span>` : ''}
+                    </div>
+                `;
+
+                conversationElement.addEventListener('click', () => {
+                    // Pass the connection_id (conv.id) and the other user object
+                    selectConversation(conv.id, conv.user);
+                });
+
+                conversationsList.appendChild(conversationElement);
+            });
+        }
+
+        // Show/hide chat area or empty state
+        function showChatArea(show) {
+            chatContent.style.display = show ? 'flex' : 'none';
+            emptyState.style.display = show ? 'none' : 'flex';
+             if (show) {
+                sendMessageBtn.disabled = false; // Enable send button when chat is open
+            } else {
+                sendMessageBtn.disabled = true; // Disable send button when no chat is open
+            }
+        }
+
+        // Select conversation
+        async function selectConversation(connectionId, otherUser) {
+            // conversationId parameter here is actually the connection_id
+            if (currentConversationId === connectionId) return; // Prevent reloading if already selected
+
+            currentConversationId = connectionId; // Set currentConversationId to the connection_id
+            showChatArea(true);
+            messagesContainer.innerHTML = '<p>Loading messages...</p>'; // Show loading state
+
+            // Update active state in conversations list
+            document.querySelectorAll('.conversation').forEach(conv => {
+                conv.classList.toggle('active', conv.dataset.conversationId === connectionId.toString());
+            });
+
+            // Update chat header
+            currentChatName.textContent = otherUser.username;
+            currentChatAvatar.src = otherUser.avatar;
+            currentChatStatus.style.display = 'none'; // Hide the status element completely
+
+            // Join Socket.IO room (using connection_id as room name)
+            socket.emit('joinConversation', connectionId);
+
+            try {
+                // Fetch messages for this connection_id
+                const response = await fetch(`/messages/conversations/${connectionId}`);
+                 if (!response.ok) {
+                     messagesContainer.innerHTML = '<p class="error-loading">Error loading messages</p>';
+                     throw new Error('Failed to fetch messages');
+                 }
+                const messages = await response.json();
+                 console.log('Loaded messages:', messages);
+                renderMessages(messages);
+                
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                 messagesContainer.innerHTML = '<p class="error-loading">Error loading messages</p>';
+            }
+        }
+
+        // Render messages
+        function renderMessages(messages) {
+            messagesContainer.innerHTML = ''; // Clear loading state or previous messages
+             if (messages.length === 0) {
+                messagesContainer.innerHTML = '<p class="no-messages">No messages yet. Send the first one!</p>';
+            }
+
+            messages.forEach(msg => {
+                 const messageElement = document.createElement('div');
+                 messageElement.classList.add('message');
+                 messageElement.classList.add(msg.senderId === currentUserId ? 'sent' : 'received');
+
+                messageElement.innerHTML = `
+                    ${msg.senderId !== currentUserId ? `<img src="${msg.senderAvatar}" alt="User Avatar" class="avatar">` : ''}
+                    <div class="message-content">
+                        <p>${msg.content}</p>
+                        <span class="time">${new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                    </div>
+                `;
+                messagesContainer.appendChild(messageElement);
+            });
+
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Send message
+        async function sendMessage() {
+            const content = messageInput.value.trim();
+            // Use currentConversationId (which is the connection_id) when sending
+            if (!content || currentConversationId === null) return; 
+
+            console.log('Sending message with conversationId:', currentConversationId, 'and content:', content);
+
+            // Optimistically add message to UI
+            const now = new Date();
+            const tempMessageId = Date.now(); // Temporary ID for optimistic update
+            renderMessageOptimistically({
+                 id: tempMessageId,
+                 content: content,
+                 senderId: currentUserId,
+                 senderAvatar: currentChatAvatar.src, // Use the avatar from chat header
+                 timestamp: now.toISOString(),
+                 isRead: 0 // Assume not read by recipient initially
+            });
+
+            // Update sidebar with the new message
+            const conversationElement = document.querySelector(`.conversation[data-conversation-id="${currentConversationId}"]`);
+            if (conversationElement) {
+                const lastMessageElement = conversationElement.querySelector('.last-message');
+                const timeElement = conversationElement.querySelector('.time');
+                if (lastMessageElement) {
+                    lastMessageElement.textContent = content;
+                }
+                if (timeElement) {
+                    timeElement.textContent = 'Just now';
+                }
+                // Move this conversation to the top of the list
+                const conversationsList = document.getElementById('conversationsList');
+                conversationsList.insertBefore(conversationElement, conversationsList.firstChild);
+            }
+
+            messageInput.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            try {
+                // Send message to the backend using the connection_id
+                const response = await fetch('/messages/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        conversationId: currentConversationId, // This is the connection_id
+                        content: content
+                    })
+                });
+
+                 if (!response.ok) {
+                     const errorData = await response.json();
+                     console.error('Error sending message:', errorData.error);
+                     // Revert the sidebar update if message sending failed
+                     if (conversationElement) {
+                         const lastMessageElement = conversationElement.querySelector('.last-message');
+                         const timeElement = conversationElement.querySelector('.time');
+                         if (lastMessageElement) {
+                             lastMessageElement.textContent = 'Failed to send message';
+                         }
+                         if (timeElement) {
+                             timeElement.textContent = 'Error';
+                         }
+                     }
+                     alert('Failed to send message'); // Simple alert for now
+                 }
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                // Revert the sidebar update if message sending failed
+                if (conversationElement) {
+                    const lastMessageElement = conversationElement.querySelector('.last-message');
+                    const timeElement = conversationElement.querySelector('.time');
+                    if (lastMessageElement) {
+                        lastMessageElement.textContent = 'Failed to send message';
+                    }
+                    if (timeElement) {
+                        timeElement.textContent = 'Error';
+                    }
+                }
+                alert('Failed to send message'); // Simple alert for now
+            }
+        }
+
+        // Render message optimistically (before server confirmation)
+         function renderMessageOptimistically(msg) {
+             const messageElement = document.createElement('div');
+             messageElement.classList.add('message');
+             messageElement.classList.add('sent'); // Optimistically assume sent
+             messageElement.dataset.tempId = msg.id; // Add a temporary ID
+
+            messageElement.innerHTML = `
+                <div class="message-content">
+                    <p>${msg.content}</p>
+                    <span class="time">${new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                </div>
+            `;
+             messagesContainer.appendChild(messageElement);
+         }
+
+        // Handle receiving new messages via Socket.IO
+        socket.on('newMessage', (message) => {
+             console.log('Received new message via socket:', message);
+            // Only add the message if it belongs to the currently selected conversation
+            if (message.conversationId === currentConversationId && message.senderId !== currentUserId) {
+                 renderMessage(message); // Render the message received from the server
+            }
+
+            // Update sidebar for any new message (whether it's in current conversation or not)
+            const conversationElement = document.querySelector(`.conversation[data-conversation-id="${message.conversationId}"]`);
+            if (conversationElement) {
+                const lastMessageElement = conversationElement.querySelector('.last-message');
+                const timeElement = conversationElement.querySelector('.time');
+                if (lastMessageElement) {
+                    lastMessageElement.textContent = message.content;
+                }
+                if (timeElement) {
+                    timeElement.textContent = 'Just now';
+                }
+                // Move this conversation to the top of the list
+                const conversationsList = document.getElementById('conversationsList');
+                conversationsList.insertBefore(conversationElement, conversationsList.firstChild);
+            }
+        });
+
+        // Helper to render a single message (from server)
+         function renderMessage(msg) {
+             const messageElement = document.createElement('div');
+             messageElement.classList.add('message');
+             messageElement.classList.add(msg.senderId === currentUserId ? 'sent' : 'received');
+
+            messageElement.innerHTML = `
+                ${msg.senderId !== currentUserId ? `<img src="${msg.senderAvatar}" alt="User Avatar" class="avatar">` : ''}
+                <div class="message-content">
+                    <p>${msg.content}</p>
+                    <span class="time">${new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                </div>
+            `;
+             messagesContainer.appendChild(messageElement);
+             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+         }
+
+        // Send message on button click or Enter key
+        sendMessageBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent newline in input
+                sendMessage();
+            }
+        });
+
+        // Handle socket connection/disconnection (optional)
+        socket.on('connect', () => {
+            console.log('Socket connected:', socket.id);
+             // Associate socket with user ID if possible (e.g., on authentication)
+             // This requires backend work to map socket ID to user ID
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+        });
+
+         // Handle errors from the server via socket
+         socket.on('error', (data) => {
+             console.error('Socket error received:', data);
+             alert('Socket error: ' + data.message);
+         });
+
+        // --- Mobile Navigation Toggle ---
+        const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
+        const sidebar = document.querySelector('.sidebar');
+
+        mobileNavToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Close sidebar when a conversation is selected on mobile
+        document.querySelectorAll('.conversation').forEach(conv => {
+            conv.addEventListener('click', () => {
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+
+         // --- Search Input (Frontend Filtering) ---
+         searchInput.addEventListener('input', (e) => {
+             const searchTerm = e.target.value.toLowerCase();
+             document.querySelectorAll('.conversation').forEach(conv => {
+                 const username = conv.querySelector('h3').textContent.toLowerCase();
+                 if (username.includes(searchTerm)) {
+                     conv.style.display = ''; // Show
+                 } else {
+                     conv.style.display = 'none'; // Hide
+                 }
+             });
+         });
+
+    </script>
+</body>
+</html> 

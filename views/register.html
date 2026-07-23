@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack - Register</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="register-container">
+        <h1>Create Your EduTrack Account</h1>
+
+        <form action="/register" method="POST" id="registerForm">
+            <input type="text" name="fullName" placeholder="Full Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required minlength="6">
+
+            <input type="text" name="institution" placeholder="Institution (e.g., CPUT, UCT, etc.)" required>
+            <input type="text" name="department" placeholder="Course or Department (e.g., Computer Engineering)" required>
+
+            <select name="yearOfStudy" required>
+                <option value="">Year of Study</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">Final Year</option>
+            </select>
+
+            <input type="text" name="interests" placeholder="Your Interests (comma-separated, e.g., AI, Media, Robotics)" required>
+
+            <button type="submit">Sign Up</button>
+        </form>
+        
+        <p class="login-link">Already have an account? <a href="/login">Login here</a></p>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                fullName: formData.get('fullName'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                institution: formData.get('institution'),
+                department: formData.get('department'),
+                yearOfStudy: formData.get('yearOfStudy'),
+                interests: formData.get('interests')
+            };
+
+            console.log('Sending registration data:', { ...data, password: '***' });
+
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.text();
+                }
+            })
+            .then(html => {
+                if (html) {
+                    document.body.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during registration. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>

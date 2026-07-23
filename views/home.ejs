@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack - Your Future Starts Here</title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="main-nav">
+        <div class="nav-brand">
+            <a href="/home">EduTrack</a>
+        </div>
+        <div class="nav-links">
+            <a href="/messages" class="nav-link">
+                <i class="fas fa-envelope"></i>
+                Messages
+            </a>
+            <a href="/profile" class="nav-link">
+                <i class="fas fa-user"></i>
+                Profile
+            </a>
+            <a href="/friends" class="nav-link">
+                <i class="fas fa-users"></i>
+                Friends
+            </a>
+            <a href="/logout" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="home-container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1>Your Future Starts Here</h1>
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" placeholder="Search for courses, jobs, or events..." id="mainSearch">
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="search-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="courses">Courses</button>
+                    <button class="filter-btn" data-filter="jobs">Jobs</button>
+                    <button class="filter-btn" data-filter="events">Events</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Sections -->
+        <div class="content-sections">
+            <!-- Courses Section -->
+            <section class="courses-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>Featured Courses</h2>
+                        <a href="/courses" class="view-all-btn">View All Courses</a>
+                    </div>
+                    
+                    <!-- Featured Courses Carousel -->
+                    <div class="featured-courses-carousel">
+                        <button class="carousel-btn prev-btn" onclick="prevCourses()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="carousel-container">
+                            <div id="featuredCoursesGrid" class="courses-grid">
+                                <!-- Featured courses will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <button class="carousel-btn next-btn" onclick="nextCourses()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Jobs Section -->
+            <section class="jobs-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>Featured Jobs</h2>
+                        <a href="#" class="view-all-jobs-btn">View All Jobs</a>
+                    </div>
+                    <!-- Featured Jobs Carousel -->
+                    <div class="featured-jobs-carousel">
+                        <button class="carousel-btn prev-job-btn" onclick="prevJobs()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="carousel-container">
+                            <div id="featuredJobsGrid" class="jobs-grid">
+                                <!-- Featured jobs will be loaded here -->
+                            </div>
+                        </div>
+                        <button class="carousel-btn next-job-btn" onclick="nextJobs()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Events Section -->
+            <section class="content-section" id="events-section">
+                <div class="section-header">
+                    <h2>Events</h2>
+                    <div class="section-filters">
+                        <select class="type-filter">
+                            <option value="">All Types</option>
+                            <option value="workshop">Workshop</option>
+                            <option value="conference">Conference</option>
+                            <option value="career-fair">Career Fair</option>
+                            <option value="networking">Networking</option>
+                        </select>
+                        <select class="date-filter">
+                            <option value="">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="this-week">This Week</option>
+                            <option value="this-month">This Month</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="events-grid" id="eventsGrid">
+                    <!-- Events will be populated dynamically -->
+                    <div class="loading-placeholder">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading events...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Course Detail Modal -->
+    <div id="courseModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="courseDetails" class="course-detail">
+                <!-- Course details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Detail Modal -->
+    <div id="jobModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="jobDetails" class="course-detail">
+                <!-- Job details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Page (hidden by default) -->
+    <div id="coursesPage" class="courses-page" style="display: none;">
+        <div class="page-header">
+            <button class="back-btn" onclick="showHomePage()">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </button>
+            <h1>All Courses</h1>
+        </div>
+        
+        <!-- Search and Filters -->
+        <div class="search-filters">
+            <div class="search-box">
+                <input type="text" id="courseSearch" placeholder="Search courses...">
+                <button onclick="loadAllCourses()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <div class="filters">
+                <select id="categoryFilter" onchange="loadAllCourses()">
+                    <option value="">All Categories</option>
+                    <option value="development">Development</option>
+                    <option value="business">Business</option>
+                    <option value="design">Design</option>
+                    <option value="marketing">Marketing</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- All Courses Grid -->
+        <div id="allCoursesGrid" class="courses-grid">
+            <!-- All courses will be loaded here -->
+        </div>
+        
+        <div class="pagination-controls">
+            <button id="prevPageBtn" class="btn btn-secondary" disabled>Previous</button>
+            <span id="pageInfo">Page 1</span>
+            <button id="nextPageBtn" class="btn btn-primary">Next</button>
+        </div>
+    </div>
+
+    <!-- Jobs Page (hidden by default) -->
+    <div id="jobsPage" class="jobs-page" style="display: none;">
+        <div class="page-header">
+            <button class="back-btn" onclick="showHomePage()">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </button>
+            <h1>All Jobs</h1>
+        </div>
+        <!-- Search and Filters -->
+        <div class="search-filters">
+            <div class="search-box">
+                <input type="text" id="jobSearch" placeholder="Search jobs...">
+                <button onclick="loadAllJobs()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <div class="filters">
+                <select id="jobCategoryFilter" onchange="loadAllJobs()">
+                    <option value="">All Categories</option>
+                    <option value="IT & Software">IT & Software</option>
+                    <option value="Design">Design</option>
+                    <option value="Business">Business</option>
+                    <option value="Teaching & Academics">Teaching & Academics</option>
+                    <option value="Medicine related jobs">Medicine related jobs</option>
+                </select>
+                <select id="jobTypeFilter" onchange="loadAllJobs()">
+                    <option value="">All Types</option>
+                    <option value="full-time">Full Time</option>
+                    <option value="part-time">Part Time</option>
+                    <option value="internship">Internship</option>
+                    <option value="apprenticeship">Apprenticeship</option>
+                </select>
+                <input type="text" id="jobLocationFilter" placeholder="Location (e.g., South Africa)" oninput="loadAllJobs()">
+            </div>
+        </div>
+        <!-- All Jobs Grid -->
+        <div id="allJobsGrid" class="jobs-grid">
+            <!-- All jobs will be loaded here -->
+        </div>
+        <div class="pagination-controls">
+            <button id="prevJobPageBtn" class="btn btn-secondary" disabled>Previous</button>
+            <span id="jobPageInfo">Page 1</span>
+            <button id="nextJobPageBtn" class="btn btn-primary">Next</button>
+        </div>
+    </div>
+
+    <style>
+        /* Add these styles to your existing CSS */
+        .search-filters {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .filters select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .loading-placeholder {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .loading-placeholder i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 2rem;
+            color: #dc3545;
+        }
+
+        .error-message i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .no-courses {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .no-courses i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .course-detail {
+            padding: 2rem;
+        }
+
+        .course-header {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .course-header img {
+            width: 300px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .course-info {
+            flex: 1;
+        }
+
+        .course-info h2 {
+            margin: 0 0 0.5rem 0;
+            color: #2c3e50;
+            font-size: 1.8rem;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            color: #666;
+        }
+
+        .course-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .course-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2ecc71;
+            margin-top: 1rem;
+        }
+
+        .course-body {
+            margin-bottom: 2rem;
+        }
+
+        .course-description {
+            margin-bottom: 2rem;
+        }
+
+        .course-description h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .course-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .detail-item h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .detail-item ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .detail-item li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .detail-item li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+        }
+
+        .course-footer {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+        }
+
+        .apply-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #2ecc71;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .apply-button:hover {
+            background: #27ae60;
+        }
+
+        @media (max-width: 768px) {
+            .course-header {
+                flex-direction: column;
+            }
+
+            .course-header img {
+                width: 100%;
+                height: 200px;
+            }
+
+            .modal-content {
+                margin: 1rem;
+            }
+
+            .course-detail {
+                padding: 1rem;
+            }
+        }
+
+        .featured-courses-carousel {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .carousel-container {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .carousel-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+
+        .carousel-btn:hover {
+            background: #0056b3;
+        }
+
+        .carousel-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .courses-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .back-btn:hover {
+            color: #0056b3;
+        }
+
+        .view-all-btn {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .view-all-btn:hover {
+            text-decoration: underline;
+        }
+
+        #featuredCoursesGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        #allCoursesGrid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        #pageInfo {
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            #featuredCoursesGrid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            #allCoursesGrid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #featuredCoursesGrid,
+            #allCoursesGrid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .featured-jobs-carousel {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        #featuredJobsGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        #allJobsGrid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .jobs-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            #featuredJobsGrid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            #allJobsGrid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #featuredJobsGrid,
+            #allJobsGrid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script src="/js/jobs.js"></script>
+    <script src="/js/courses.js"></script>
+    <script>
+    let currentFeaturedPage = 0;
+    let currentAllCoursesPage = 0;
+    const coursesPerPage = 12;
+
+    // Load featured courses (3 at a time)
+    async function loadFeaturedCourses() {
+        try {
+            const response = await fetch(`/api/courses/featured?page=${currentFeaturedPage}&limit=3`);
+            const data = await response.json();
+            
+            const coursesGrid = document.getElementById('featuredCoursesGrid');
+            coursesGrid.innerHTML = '';
+            
+            if (!data.courses || data.courses.length === 0) {
+                coursesGrid.innerHTML = `
+                    <div class="no-courses">
+                        <i class="fas fa-search"></i>
+                        <h3>No courses found</h3>
+                        <p>Try adjusting your search criteria</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            data.courses.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'course-card';
+                card.innerHTML = `
+                    <div class="course-image">
+                        <img src="${course.pic}" alt="${course.title}" onerror="this.src='/images/course-placeholder.webp'">
+                        <div class="course-level">${course.language}</div>
+                    </div>
+                    <div class="course-content">
+                        <h3>${course.title}</h3>
+                        <p class="course-partner">${course.platform}</p>
+                        <div class="course-meta">
+                            <span><i class="fas fa-clock"></i> ${course.duration} hours</span>
+                            <span><i class="fas fa-star"></i> ${course.rating || 0}</span>
+                            <span><i class="fas fa-globe"></i> ${course.language}</span>
+                        </div>
+                        <div class="course-price">${course.org_price}</div>
+                        <button class="btn btn-primary view-details-btn" data-course-id="${course.id}">
+                            View Details
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listener to the button
+                const viewDetailsBtn = card.querySelector('.view-details-btn');
+                viewDetailsBtn.addEventListener('click', () => {
+                    showCourseDetails(course.id);
+                });
+                
+                coursesGrid.appendChild(card);
+            });
+            
+            // Update carousel buttons
+            document.querySelector('.prev-btn').disabled = currentFeaturedPage === 0;
+            document.querySelector('.next-btn').disabled = !data.hasMore;
+        } catch (error) {
+            console.error('Error loading featured courses:', error);
+            const coursesGrid = document.getElementById('featuredCoursesGrid');
+            coursesGrid.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error loading courses</h3>
+                    <p>${error.message}</p>
+                    <button class="btn btn-primary retry-btn" onclick="loadFeaturedCourses()">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    // Load all courses (12 at a time)
+    async function loadAllCourses() {
+        try {
+            const searchQuery = document.getElementById('courseSearch').value;
+            const category = document.getElementById('categoryFilter').value;
+            
+            const response = await fetch(`/api/courses?page=${currentAllCoursesPage}&limit=${coursesPerPage}&search=${searchQuery}&category=${category}`);
+            const data = await response.json();
+            
+            const coursesGrid = document.getElementById('allCoursesGrid');
+            coursesGrid.innerHTML = '';
+            
+            if (!data.courses || data.courses.length === 0) {
+                coursesGrid.innerHTML = `
+                    <div class="no-courses">
+                        <i class="fas fa-search"></i>
+                        <h3>No courses found</h3>
+                        <p>Try adjusting your search criteria</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            data.courses.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'course-card';
+                card.innerHTML = `
+                    <div class="course-image">
+                        <img src="${course.pic}" alt="${course.title}" onerror="this.src='/images/course-placeholder.webp'">
+                        <div class="course-level">${course.language}</div>
+                    </div>
+                    <div class="course-content">
+                        <h3>${course.title}</h3>
+                        <p class="course-partner">${course.platform}</p>
+                        <div class="course-meta">
+                            <span><i class="fas fa-clock"></i> ${course.duration} hours</span>
+                            <span><i class="fas fa-star"></i> ${course.rating || 0}</span>
+                            <span><i class="fas fa-globe"></i> ${course.language}</span>
+                        </div>
+                        <div class="course-price">${course.org_price}</div>
+                        <button class="btn btn-primary view-details-btn" data-course-id="${course.id}">
+                            View Details
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listener to the button
+                const viewDetailsBtn = card.querySelector('.view-details-btn');
+                viewDetailsBtn.addEventListener('click', () => {
+                    showCourseDetails(course.id);
+                });
+                
+                coursesGrid.appendChild(card);
+            });
+            
+            // Update pagination
+            document.getElementById('prevPageBtn').disabled = currentAllCoursesPage === 0;
+            document.getElementById('nextPageBtn').disabled = !data.hasMore;
+            document.getElementById('pageInfo').textContent = `Page ${currentAllCoursesPage + 1}`;
+        } catch (error) {
+            console.error('Error loading all courses:', error);
+            const coursesGrid = document.getElementById('allCoursesGrid');
+            coursesGrid.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error loading courses</h3>
+                    <p>${error.message}</p>
+                    <button class="btn btn-primary retry-btn" onclick="loadAllCourses()">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    // Navigation functions
+    function prevCourses() {
+        if (currentFeaturedPage > 0) {
+            currentFeaturedPage--;
+            loadFeaturedCourses();
+        }
+    }
+
+    function nextCourses() {
+        currentFeaturedPage++;
+        loadFeaturedCourses();
+    }
+
+    function prevAllCourses() {
+        if (currentAllCoursesPage > 0) {
+            currentAllCoursesPage--;
+            loadAllCourses();
+        }
+    }
+
+    function nextAllCourses() {
+        currentAllCoursesPage++;
+        loadAllCourses();
+    }
+
+    // Page navigation
+    function showCoursesPage() {
+        document.querySelector('.home-container').style.display = 'none';
+        document.getElementById('coursesPage').style.display = 'block';
+        loadAllCourses();
+    }
+
+    function showHomePage() {
+        document.getElementById('coursesPage').style.display = 'none';
+        document.querySelector('.home-container').style.display = 'block';
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        loadFeaturedCourses();
+        
+        // Add event listeners
+        document.querySelector('.view-all-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            showCoursesPage();
+        });
+        
+        document.getElementById('prevPageBtn').addEventListener('click', prevAllCourses);
+        document.getElementById('nextPageBtn').addEventListener('click', nextAllCourses);
+        
+        // Add touch swipe support for featured courses
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        const carousel = document.querySelector('.carousel-container');
+        
+        carousel.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        carousel.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+        
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextCourses(); // Swipe left
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                prevCourses(); // Swipe right
+            }
+        }
+    });
+    </script>
+</body>
+</html> 
